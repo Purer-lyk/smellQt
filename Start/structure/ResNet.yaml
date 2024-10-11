@@ -1,0 +1,24 @@
+# Parameters
+# classes
+nc: 4
+
+# input dims
+indim: 4
+
+# model structure
+structure:
+  [
+    [-1, 1, Conv, [4, 3, 1, 1, 1, True]],
+    [-1, 1, Conv, [8, 3, 1, 1, 1, False]],
+#    [-1, 1, Conv, [64, 3, 1, 1, 1]],
+    [-1, 1, Conv, [32, 3, 1, 1, 1]],
+    [-1, 1, BottleNeck, [32, 1, 1, True]],
+    [-1, 1, nn.AdaptiveAvgPool2d, [1]],
+    [-1, 1, Conv, [128, 1, 1, 0, 1, False, True, False]],
+    [-1, 1, nn.Flatten, []],
+#    [ -1, 1, nn.ReLU, []],
+#    [ -1, 1, nn.BatchNorm1d, []],
+#    [ -1, 1, nn.Linear, [16, False]],
+#    [ -1, 1, nn.BatchNorm1d, []],
+    [-1, 1, nn.Linear, [nc, False]],
+  ]

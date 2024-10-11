@@ -1,0 +1,15 @@
+# Parameters
+nc: 3
+
+indim: 3
+# refer YOLO
+structure:
+  # [from, number, module, args, ]  # from==-1 means from last layer
+  [
+    [-1, 1, TransformerBlock, [32, 256, 4, 2]],
+    [ -1, 1, nn.BatchNorm1d, []],
+    [-1, 1, nn.ReLU, []],
+    [-1, 1, FC, [64, True, True, True]],
+    [-1, 1, FC, [8, True, True, True]]
+    [-1, 1, FC, [nc, False, False]],
+  ]

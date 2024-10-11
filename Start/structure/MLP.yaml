@@ -1,0 +1,13 @@
+nc: 4
+
+indim: 2
+
+structure:
+  [
+    [-1, 1, FC, [64, True, True]],
+    [-1, 1, FC, [128, True, True, 0.5]],
+#    [-1, 1, FC, [64, True, True]],
+#    [-1, 1, FC, [64, True, True]],
+    [-1, 1, FC, [32, False, True]],
+    [-1, 1, FC, [nc, False, False]]
+  ]
