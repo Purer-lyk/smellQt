@@ -1,11 +1,11 @@
 import glob
 import os
-from Master.Start import Train
+from Start import Train
 import torch
 from model import STDSMT, STDSCT
 from generate import readFromCsv, readFromXlsx, smt_dataset, sct_dataset, ori_path
 from torch.utils import data
-from Master.Start import model
+from Start import model
 
 # train_ori_path = "/dataset/train/"
 # test_ori_path = "/dataset/test/"

@@ -1,8 +1,8 @@
 import sys
 import requests
 from PyQt5 import QtGui
-from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPainter, QPen, QColor
+from PyQt5.QtCore import QPoint, Qt, QObject, QThread, pyqtSignal
+from PyQt5.QtGui import QPainter, QPen, QColor, QFont
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QVBoxLayout, QLabel, QScrollArea
 from bs4 import BeautifulSoup
 from functools import partial
@@ -50,8 +50,15 @@ class Space(QWidget):
 
         self.area.setWidget(self.dataText)
         self.area.setWidgetResizable(True)
+
+        font = QFont()
+        font.setBold(True)
+        font.setFamily("Times New Roman")
+        font.setPointSize(15)
+        self.dataText.setFont(font)
         self.dataText.setWordWrap(True)
         self.dataText.setAlignment(Qt.AlignCenter)
+        
 
         self.area.setFixedHeight(40)
         self.area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -63,22 +70,49 @@ class Space(QWidget):
     def Result(self):
         print("process data by neural network")
         # todo:调用神经网络部分
-        # classIndex = infer(self.model_path, self.div)
-        self.dataText.setText(label_list[0])
+        classIndex = infer(self.model_path, self.div)
+        self.dataText.setText(label_list[classIndex])
 
     def setData(self, input_div):
         self.div = input_div
 
 
+class processData(QObject):
+    requestAndSend = pyqtSignal(list)
+    def __init__(self):
+        super(processData, self).__init__()
+
+    def processMain(self):
+        res = requests.post('http://192.168.43.115/Start')
+        html = res.text
+        soup = BeautifulSoup(html, 'html.parser')
+        # print(soup)
+        div = [[int(i) for i in soup.find('div1').text.split(', ')],
+                [int(i) for i in soup.find('div2').text.split(', ')],
+                [int(i) for i in soup.find('div3').text.split(', ')],
+                [int(i) for i in soup.find('div4').text.split(', ')]]
+        self.requestAndSend.emit(div)
+        
+
+
 class box1(QWidget):
+    operateStart = pyqtSignal()
     def __init__(self, grapher: GraphProcess, worker: Space, mpath: str):
         super(box1, self).__init__()
-        self.div = [[1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5],
-                    [409500, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5], [], []]
+        # self.div = [[1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5],
+        #             [409500, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5], [], []]
+        self.div = [[], [], [], []]
         self.grapher = grapher
         self.model_path = mpath
         self.infere = worker
+        self.processWorker = processData()
         self.showData = QLabel()
+        self.processThread = QThread()
+        self.processWorker.moveToThread(self.processThread)
+        self.operateStart.connect(self.processWorker.processMain)
+        self.processWorker.requestAndSend.connect(self.receiveStart)
+        self.processThread.start()
+
         self.initUI()
 
     def initUI(self):
@@ -146,19 +180,23 @@ class box1(QWidget):
                         335791, 345733, 355432, 365216, 365758, 365779, 357938, 358415, 358927, 365762, 357775, 405686,
                         401210, 407523, 405148, 406514, 409543, 401597, 405742, 405012, 402588, 404544, 402576, 407501
                         ]
-        # self.grapher.setData(self.div[index-1])
+        getData = self.div[index-1]
         self.grapher.setData(getData)
 
     def Start(self):
-        res = requests.post('http://192.168.43.115/Start')
-        html = res.text
-        soup = BeautifulSoup(html, 'html.parser')
-        # print(soup)
-        self.div = [[int(i) for i in soup.find('div1').text.split(', ')],
-                    [int(i) for i in soup.find('div2').text.split(', ')],
-                    [int(i) for i in soup.find('div3').text.split(', ')],
-                    [int(i) for i in soup.find('div4').text.split(', ')]]
-        print(self.div)
+        self.operateStart.emit()
+
+    def receiveStart(self, div):
+        # res = requests.post('http://192.168.43.115/Start')
+        # html = res.text
+        # soup = BeautifulSoup(html, 'html.parser')
+        # # print(soup)
+        # self.div = [[int(i) for i in soup.find('div1').text.split(', ')],
+        #             [int(i) for i in soup.find('div2').text.split(', ')],
+        #             [int(i) for i in soup.find('div3').text.split(', ')],
+        #             [int(i) for i in soup.find('div4').text.split(', ')]]
+        self.div = div
+        # print(self.div)
         self.infere.setData(self.div)
 
 
@@ -169,10 +207,6 @@ class SimpleApp(QWidget):
         # 设置gui大小
         self.gwidth = 1500
         self.gheight = 800
-        self.ygridSize = 20000
-        self.ymaxSize = 200000
-        self.yguiSize = int(self.gheight * 0.75)
-        self.xguiSize = int(self.gwidth * 0.75)
         self.model_path = mpath
         self.initUI()
 
@@ -201,7 +235,7 @@ class SimpleApp(QWidget):
 
 
 if __name__ == "__main__":
-    model = "./model/2024-09-29_STDSMT_0.pt"
+    model = "F:/lyk/smellQt/Master/qt/model/2024-09-29_STDSMT_0.pt"
     app = QApplication(sys.argv)
     ex = SimpleApp(model)
     ex.show()

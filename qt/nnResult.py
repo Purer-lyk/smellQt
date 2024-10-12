@@ -10,7 +10,7 @@ def infer(model_path: str, input_data: list) -> int:
     if model_path == "":
         model = STDSMT()
     else:
-        model = torch.load(model_path).eval()
+        model = torch.load(model_path, map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu")).eval()
     print(model)
     model_type = None
     if 'SMT' in model_path or \

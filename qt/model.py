@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from cfg import device, conf
 from typing import Union
-from Master.Start import model
+from Start import model
 
 
 class FlatoSequence(nn.Module):
